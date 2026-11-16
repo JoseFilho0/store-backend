@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Product;
 use App\Models\Category;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
@@ -41,6 +42,16 @@ class CategoryMetadataSeeder extends Seeder
         $metadataCor->values()->create([
             'id' => 'azul',
             'label' => 'Azul',
+        ]);
+
+        Product::first()->metadata()->create([
+            'category_metadata_id' => 'cor',
+            'metadata_value_id' => 'azul',
+        ]);
+
+        Product::first()->metadata()->create([
+            'category_metadata_id' => 'tecnologia',
+            'metadata_value_id' => 'laravel',
         ]);
     }
 }
