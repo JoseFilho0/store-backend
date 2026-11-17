@@ -134,4 +134,57 @@ class ProductController extends Controller
             ]
         ]);
     }
+
+    public function getProductsRelatedById(Request $request, $id) 
+    {
+        if (!is_numeric($id)) {
+            return response()->json([
+                'error' => 'Produto inválido.',
+                'products' => []
+            ], 400);
+        }
+
+        $validator = Validator::make($request->query(), [
+            'limit' => ['sometimes', 'numeric']
+        ], [
+            'limit' => 'O campo limit deve ser um número.'
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'error' => $validator->errors()->first(),
+                'products' => []
+            ], 400);
+        }
+
+        $product = Product::find($id);
+
+        if (!$product) {
+            return response()->json([
+                'error' => 'Produto não encontrado.',
+                'products' => []
+            ], 404);
+        }
+
+        $limit = $request->query('limit', 10);
+
+        $relatedProducts = Product::where('category_id', $product->category_id)
+            ->where('id', '!=', $product->id)
+            ->with('images')
+            ->limit($limit)
+            ->get();
+
+        return response()->json([
+            'error' => null,
+            'products' => $relatedProducts->map(function ($product) {
+                return [
+                    'id' => $product->id,
+                    'label' => $product->label,
+                    'price' => $product->price,
+                    'image' => asset('storage/' . ($product->images->first()->url ?? 'images/default.png')),
+                    'liked' => false // TODO
+                ];
+            })
+        ]);
+    }
 }
