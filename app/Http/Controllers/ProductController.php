@@ -106,6 +106,8 @@ class ProductController extends Controller
             ], 404);
         }
 
+        $product->increment('views_count');
+
         $images = $product->images->map(function ($image) {
             return asset('storage/' . $image->url);
         })->toArray();

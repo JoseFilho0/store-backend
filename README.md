@@ -166,7 +166,7 @@ npm start
   }
   ```
 
-### `GET /product/:id`
+### `GET /product/:id` - OK
 - **Description:** Get a single product by ID.
 - **Auth:** None
 - **Params:**
