@@ -311,7 +311,7 @@ npm start
 
 ## User
 
-### `POST /user/register`
+### `POST /user/register` - OK
 - **Description:** Register a new user.
 - **Auth:** None
 - **Body:**
