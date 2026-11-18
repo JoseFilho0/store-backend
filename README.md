@@ -270,7 +270,7 @@ npm start
   }
   ```
 
-### `GET /cart/shipping`
+### `GET /cart/shipping` - OK
 - **Description:** Calculate shipping cost and days for a zipcode.
 - **Auth:** None
 - **Query:**

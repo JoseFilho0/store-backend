@@ -4,6 +4,7 @@ use App\Http\Controllers\BannerController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\CartController;
+use App\Http\Controllers\UserController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -18,3 +19,5 @@ Route::get('/product/{id}/related', [ProductController::class, 'getProductsRelat
 Route::get('/categories/{slug}/metadata', [CategoryController::class, 'getCategoryMetadataBySlug']);
 Route::post('/cart/mount', [CartController::class, 'mount']);
 Route::get('/cart/shipping', [CartController::class, 'shipping']);
+
+Route::post('/user/register', [UserController::class, 'register']);
