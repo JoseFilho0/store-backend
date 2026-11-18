@@ -53,4 +53,43 @@ class UserController extends Controller
             ]
         ]);
     }
+
+    public function login(Request $request)
+    {
+        $validator = Validator::make(
+            $request->all(),
+            [
+                'email' => ['required', 'string', 'email'],
+                'password' => ['required', 'string']
+            ], [
+                'email.required' => 'O campo email é obrigatório.',
+                'email.string' => 'O campo email deve ser uma string.',
+                'email.email' => 'O campo email deve ser um endereço de email válido.',
+                'password.required' => 'O campo senha é obrigatório.',
+                'password.string' => 'O campo senha deve ser uma string.'
+            ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'error' => 'Usuário ou senha inválidos.',
+                'user' => null
+            ], 400);
+        }
+
+        $user = User::where('email', $request->input('email'))->first();
+
+        if (!$user || !Hash::check($request->input('password'), $user->password)) {
+            return response()->json([
+                'error' => 'Usuário ou senha inválidos.',
+                'user' => null
+            ], 400);
+        }
+
+        $token = $user->createToken('auth_token')->plainTextToken;
+
+        return response()->json([
+            'error' => null,
+            'token' => $token,
+        ]);
+    }
 }

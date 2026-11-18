@@ -21,3 +21,4 @@ Route::post('/cart/mount', [CartController::class, 'mount']);
 Route::get('/cart/shipping', [CartController::class, 'shipping']);
 
 Route::post('/user/register', [UserController::class, 'register']);
+Route::post('/user/login', [UserController::class, 'login']);

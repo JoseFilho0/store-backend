@@ -334,7 +334,7 @@ npm start
   }
   ```
 
-### `POST /user/login`
+### `POST /user/login` - OK
 - **Description:** Login and receive a token.
 - **Auth:** None
 - **Body:**
