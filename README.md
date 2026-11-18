@@ -193,7 +193,7 @@ npm start
   }
   ```
 
-### `GET /product/:id/related`
+### `GET /product/:id/related` - OK
 - **Description:** Get related products from the same category.
 - **Auth:** None
 - **Params:**
