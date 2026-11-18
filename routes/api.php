@@ -3,6 +3,7 @@
 use App\Http\Controllers\BannerController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\CartController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -15,3 +16,4 @@ Route::get('/products', [ProductController::class, 'getAllProducts']);
 Route::get('/product/{id}', [ProductController::class, 'getProductById']);
 Route::get('/product/{id}/related', [ProductController::class, 'getProductsRelatedById']);
 Route::get('/categories/{slug}/metadata', [CategoryController::class, 'getCategoryMetadataBySlug']);
+Route::post('/cart/mount', [CartController::class, 'mount']);

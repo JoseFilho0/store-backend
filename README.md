@@ -216,7 +216,7 @@ npm start
 
 ## Categories
 
-### `GET /category/:slug/metadata`
+### `GET /category/:slug/metadata` - OK
 - **Description:** Get category and its metadata by slug.
 - **Auth:** None
 - **Params:**
