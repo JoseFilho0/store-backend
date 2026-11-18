@@ -17,3 +17,4 @@ Route::get('/product/{id}', [ProductController::class, 'getProductById']);
 Route::get('/product/{id}/related', [ProductController::class, 'getProductsRelatedById']);
 Route::get('/categories/{slug}/metadata', [CategoryController::class, 'getCategoryMetadataBySlug']);
 Route::post('/cart/mount', [CartController::class, 'mount']);
+Route::get('/cart/shipping', [CartController::class, 'shipping']);

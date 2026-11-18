@@ -50,4 +50,34 @@ class CartController extends Controller
             'products' => $formattedProducts
         ]);
     }
+
+    public function shipping(Request $request)
+    {
+        $validator = Validator::make(
+            $request->all(),
+            [
+                'zipcode' => ['required', 'min:4'],
+            ],
+            [
+                'zipcode.required' => 'O campo zipcode é obrigatório.',
+                'zipcode.min' => 'O campo zipcode deve ter pelo menos 4 caracteres.',
+            ]
+        );
+
+        if ($validator->fails()) {
+            return response()->json([
+                'error' => $validator->errors()->first(),
+                'shipping' => null
+            ], 400);
+        }
+
+        return response()->json([
+            'error' => null,
+            'shipping' => [
+                'zipcode' => $request->input('zipcode'),
+                'price' => 7,
+                'days' => 3
+            ]
+        ]);
+    }
 }

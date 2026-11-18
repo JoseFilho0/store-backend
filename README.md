@@ -248,7 +248,7 @@ npm start
 
 ## Cart
 
-### `POST /cart/mount`
+### `POST /cart/mount` - OK
 - **Description:** Get product details for a list of product IDs.
 - **Auth:** None
 - **Body:**
