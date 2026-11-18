@@ -137,7 +137,7 @@ class UserController extends Controller
         if ($validator->fails()) {
             return response()->json([
                 'error' => $validator->errors()->first(),
-                'addresses' => null
+                'address' => null
             ], 400);
         }
 
@@ -166,6 +166,18 @@ class UserController extends Controller
                 'country' => $address->country,
                 'complement' => $address->complement
             ]
+        ]);
+    }
+
+    public function getAddresses(Request $request)
+    {
+        $user = Auth::user();
+        $user = User::find($user->id);
+        $addresses = $user->addresses()->get();
+
+        return response()->json([
+            'error' => null,
+            'addresses' => $addresses
         ]);
     }
 }
