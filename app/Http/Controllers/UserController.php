@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Address;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 
@@ -92,6 +94,78 @@ class UserController extends Controller
         return response()->json([
             'error' => null,
             'token' => $token,
+        ]);
+    }
+
+    public function createAddress(Request $request)
+    {
+        $validator = Validator::make(
+            $request->all(),       
+            [
+                'zipcode' => ['required', 'string', 'max:20'],
+                'street' => ['required', 'string', 'max:255'],
+                'number' => ['required', 'string', 'max:20'],
+                'city' => ['required', 'string', 'max:100'],
+                'state' => ['required', 'string', 'max:100'],
+                'country' => ['required', 'string', 'max:100'],
+                'complement' => ['sometimes', 'nullable', 'string', 'max:255'],
+            ],
+            [
+                'zipcode.required' => 'O CEP é obrigatório.',
+                'zipcode.string' => 'O CEP deve ser um texto válido.',
+                'zipcode.max' => 'O CEP deve ter no máximo 20 caracteres.',
+                'street.required' => 'O logradouro é obrigatório.',
+                'street.string' => 'O logradouro deve ser um texto válido.',
+                'street.max' => 'O logradouro deve ter no máximo 255 caracteres.',
+                'number.required' => 'O número do endereço é obrigatório.',
+                'number.string' => 'O número do endereço deve ser um texto válido.',
+                'number.max' => 'O número do endereço deve ter no máximo 20 caracteres.',
+                'city.required' => 'A cidade é obrigatória.',
+                'city.string' => 'A cidade deve ser um texto válido.',
+                'city.max' => 'A cidade deve ter no máximo 100 caracteres.',
+                'state.required' => 'O estado é obrigatório.',
+                'state.string' => 'O estado deve ser um texto válido.',
+                'state.max' => 'O estado deve ter no máximo 100 caracteres.',
+                'country.required' => 'O país é obrigatório.',
+                'country.string' => 'O país deve ser um texto válido.',
+                'country.max' => 'O país deve ter no máximo 100 caracteres.',
+                'complement.string' => 'O complemento deve ser um texto válido.',
+                'complement.max' => 'O complemento deve ter no máximo 255 caracteres.',
+            ]
+        );
+
+        if ($validator->fails()) {
+            return response()->json([
+                'error' => $validator->errors()->first(),
+                'addresses' => null
+            ], 400);
+        }
+
+        $user = Auth::user();
+
+        $address = Address::create([
+            'user_id' => $user->id,
+            'zipcode' => $request->input('zipcode'),
+            'street' => $request->input('street'),
+            'number' => $request->input('number'),
+            'city' => $request->input('city'),
+            'state' => $request->input('state'),
+            'country' => $request->input('country'),
+            'complement' => $request->input('complement'),
+        ]);
+
+        return response()->json([
+            'error' => null,
+            'address' => [
+                'id' => $address->id,
+                'zipcode' => $address->zipcode,
+                'street' => $address->street,
+                'number' => $address->number,
+                'city' => $address->city,
+                'state' => $address->state,
+                'country' => $address->country,
+                'complement' => $address->complement
+            ]
         ]);
     }
 }
