@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Address;
+use App\Models\Order;
 use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -130,6 +131,27 @@ class CartController extends Controller
             $total += $product->price * $item['quantity'];
         }
 
-        dd($total);
+        $order = Order::create([
+            'user_id' => $user->id,
+            'total' => $total,
+            'shippingCost' => 7,
+            'shippingDays' => 3,
+            'shippingZipcode' => $address->zipcode,
+            'shippingStreet' => $address->street,
+            'shippingNumber' => $address->number,
+            'shippingcity' => $address->city,
+            'shippingState' => $address->state,
+            'shippingCountry' => $address->country,
+            'shippingComplement' => $address->complement,
+        ]);
+
+        foreach($cart as $item) {
+            $product = $products->find($item['productId']);
+            $order->products()->create([
+                'product_id' => $product->id,
+                'quantity' => $item['quantity'],
+                'price' => $product->price
+            ]);
+        }
     }
 }
