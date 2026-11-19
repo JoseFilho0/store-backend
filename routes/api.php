@@ -27,4 +27,5 @@ Route::post('/user/login', [UserController::class, 'login']);
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/user/addresses', [UserController::class, 'createAddress']);
     Route::get('/user/addresses', [UserController::class, 'getAddresses']);
+    Route::post('/cart/finish', [CartController::class, 'finish']);
 });

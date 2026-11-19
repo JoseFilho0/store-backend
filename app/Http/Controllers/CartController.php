@@ -2,9 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Address;
 use App\Models\Product;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
+
+use function Laravel\Prompts\error;
 
 class CartController extends Controller
 {
@@ -79,5 +83,53 @@ class CartController extends Controller
                 'days' => 3
             ]
         ]);
+    }
+
+    public function finish(Request $request)
+    {
+        $validator = Validator::make(
+            $request->all(),
+            [
+                'cart' => ['required', 'array', 'min:1'],
+                'cart.*.productId' => ['required', 'numeric', 'min:1'],
+                'cart.*.quantity' => ['required', 'numeric', 'min:1'],
+                'addressId' => ['required', 'numeric', 'min:1'],
+            ],
+            [
+                'cart.required' => 'O campo cart é obrigatório.',
+                'cart.array' => 'O campo cart deve ser um array.',
+                'cart.min' => 'O campo cart deve ter ao menos 1 item.',
+            ]
+        );
+
+        if ($validator->fails()) {
+            return response()->json([
+                'error' => $validator->errors()->first(),
+                'products' => []
+            ], 400);
+        }
+
+        $user = Auth::user();
+
+        $address = Address::find($request->input('addressId'));
+
+        if ($address->user_id != $user->id) {
+            return response()->json([
+                'error' => 'Endereço não pertence ao usuário',
+                'products' => []
+            ]);
+        }
+
+        $cart = $request->input('cart');
+
+        $products = Product::whereIn('id', array_column($cart, 'productId'))->get();
+
+        $total = 0;
+        foreach($cart as $item) {
+            $product = $products->find($item['productId']);
+            $total += $product->price * $item['quantity'];
+        }
+
+        dd($total);
     }
 }
