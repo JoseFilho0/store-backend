@@ -1,560 +1,97 @@
-# B7Store Backend API Documentation
+﻿# B7Store Backend
 
-This document describes all available API routes, their parameters, request/response types, and authentication requirements.
+A B7Store é uma API REST de e-commerce feita com PHP e Laravel. Este repositório contém apenas o backend da loja. Para explorar o catálogo, montar um carrinho, fazer login e simular um pedido, envie requisições pelo Insomnia e veja as respostas JSON. A rota `/` exibe a página padrão do Laravel.
 
----
+## Como rodar localmente
 
-## Table of Contents
-- [Installation](#installation)
-- [General](#general)
-- [Banners](#banners)
-- [Products](#products)
-- [Categories](#categories)
-- [Cart](#cart)
-- [User](#user)
-- [Orders](#orders)
-- [Webhooks](#webhooks)
+Você precisa de Git, PHP 8.4 ou superior com a extensão `pdo_sqlite`, Composer 2 e Insomnia. O projeto usa SQLite por padrão, em um arquivo local.
 
----
+Clone o repositório, instale as dependências e prepare a configuração local.
 
-## Installation
-
-### Prerequisites
-
-Before setting up the project, make sure you have the following installed:
-
-- **Node.js** (version 18 or higher)
-- **npm** or **yarn** package manager
-- **PostgreSQL** database (version 12 or higher)
-- **Git** for version control
-
-### Setup Instructions
-
-1. **Clone the repository**
-   ```bash
-   git clone <repository-url>
-   cd b7store-backend
-   ```
-
-2. **Install dependencies**
-   ```bash
-   npm install
-   ```
-
-3. **Environment Configuration**
-   
-   Copy the environment example file and configure your variables:
-   ```bash
-   cp .env.example .env
-   ```
-   
-   Then edit the `.env` file with your specific configuration values (database URL, Stripe keys, etc.).
-
-4. **Database Setup**
-   
-   Make sure your PostgreSQL database is running and accessible. Verify your `DATABASE_URL` variable in the `.env` file is correctly configured for your database connection.
-
-5. **Run Database Migrations**
-   
-   Apply the database schema:
-   ```bash
-   npx prisma migrate deploy
-   ```
-   
-   Or for development with migration history:
-   ```bash
-   npx prisma migrate dev
-   ```
-
-6. **Generate Prisma Client**
-   ```bash
-   npx prisma generate
-   ```
-
-7. **Seed the Database**
-   
-   Populate the database with initial data (categories, products, banners):
-   ```bash
-   npm run db:seed
-   ```
-
-### Running the Project
-
-#### Development Mode
-```bash
-npm run dev
+```sh
+git clone https://github.com/JoseFilho0/store-backend.git
+cd store-backend
+composer install
+php -r "file_exists('.env') || copy('.env.example', '.env');"
+php artisan key:generate
 ```
 
-The server will start on `http://localhost:4000` (or the port specified in your `.env` file).
+Mantenha `DB_CONNECTION=sqlite` no `.env`. Os comandos abaixo criam o arquivo do banco, aplicam as migrações e carregam produtos, banners, categorias e uma conta de demonstração. Execute a carga inicial uma vez em um banco novo.
 
-#### Production Mode
-```bash
-# Build the project (if applicable)
-npm run build
-
-# Start the production server
-npm start
+```sh
+php -r "file_exists('database/database.sqlite') || touch('database/database.sqlite');"
+php artisan migrate --seed
+php artisan serve --host=127.0.0.1 --port=8000
 ```
 
-### Verifying the Installation
+Deixe o servidor rodando. A URL base das requisições é `http://127.0.0.1:8000/api`.
 
-1. **Health Check**
-   
-   Visit `http://localhost:3000/ping` - you should see:
-   ```json
-   { "pong": true }
-   ```
-  
----
+## Como testar no Insomnia
 
-## General
+Crie uma requisição HTTP, escolha o método, cole a URL e adicione o cabeçalho `Accept: application/json` em **Headers**. Para enviar dados em uma requisição POST, selecione **Body → JSON** e cole o corpo indicado. Clique em **Send** para ver o status HTTP e o corpo da resposta.
 
-### `GET /ping` - OK
-- **Description:** Health check endpoint.
-- **Auth:** None
-- **Response:**
-  ```json
-  { "pong": true }
-  ```
+### 1. Verifique se a API está rodando
 
----
+Envie `GET http://127.0.0.1:8000/api/ping`. Você deve receber HTTP 200 com este corpo.
 
-## Banners
-
-### `GET /banners` - OK
-- **Description:** Get all banners.
-- **Auth:** None
-- **Response:**
-  ```json
-  {
-    "error": null,
-    "banners": [
-      {
-        "img": "media/banners/<filename>",
-        "link": "<url>"
-      }
-    ]
-  }
-  ```
-
----
-
-## Products
-
-### `GET /products` OK
-- **Description:** List products with optional filters.
-- **Auth:** None
-- **Query Parameters:**
-  | Name     | Type   | Required | Description                      |
-  | -------- | ------ | -------- | -------------------------------- |
-  | metadata | string | No       | JSON string of metadata filters  |
-  | orderBy  | string | No       | "views", "selling", or "price"   |
-  | limit    | string | No       | Max number of products to return |
-- **Response:**
-  ```json
-  {
-    "error": null,
-    "products": [
-      {
-        "id": 1,
-        "label": "Product Name",
-        "price": 99.99,
-        "image": "media/products/<filename>",
-        "liked": false
-      }
-    ]
-  }
-  ```
-
-### `GET /product/:id` - OK
-- **Description:** Get a single product by ID.
-- **Auth:** None
-- **Params:**
-  | Name | Type             | Required |
-  | ---- | ---------------- | -------- |
-  | id   | string (numeric) | Yes      |
-- **Response:**
-  ```json
-  {
-    "error": null,
-    "product": {
-      "id": 1,
-      "label": "Product Name",
-      "price": 99.99,
-      "description": "...",
-      "categoryId": 1,
-      "images": ["media/products/<filename>"]
-    },
-    "category": {
-      "id": 1,
-      "name": "Category Name",
-      "slug": "category-slug"
-    }
-  }
-  ```
-
-### `GET /product/:id/related` - OK
-- **Description:** Get related products from the same category.
-- **Auth:** None
-- **Params:**
-  | Name | Type             | Required |
-  | ---- | ---------------- | -------- |
-  | id   | string (numeric) | Yes      |
-- **Query:**
-  | Name  | Type             | Required |
-  | ----- | ---------------- | -------- |
-  | limit | string (numeric) | No       |
-- **Response:**
-  ```json
-  {
-    "error": null,
-    "products": [ ... ]
-  }
-  ```
-
----
-
-## Categories
-
-### `GET /category/:slug/metadata` - OK
-- **Description:** Get category and its metadata by slug.
-- **Auth:** None
-- **Params:**
-  | Name | Type   | Required |
-  | ---- | ------ | -------- |
-  | slug | string | Yes      |
-- **Response:**
-  ```json
-  {
-    "error": null,
-    "category": {
-      "id": 1,
-      "name": "Category Name",
-      "slug": "category-slug"
-    },
-    "metadata": [
-      {
-        "id": "meta_id",
-        "name": "Meta Name",
-        "values": [
-          { "id": "value_id", "label": "Value Label" }
-        ]
-      }
-    ]
-  }
-  ```
-
----
-
-## Cart
-
-### `POST /cart/mount` - OK
-- **Description:** Get product details for a list of product IDs.
-- **Auth:** None
-- **Body:**
-  ```json
-  { "ids": [1, 2, 3] }
-  ```
-- **Response:**
-  ```json
-  {
-    "error": null,
-    "products": [
-      {
-        "id": 1,
-        "label": "Product Name",
-        "price": 99.99,
-        "image": "media/products/<filename>"
-      }
-    ]
-  }
-  ```
-
-### `GET /cart/shipping` - OK
-- **Description:** Calculate shipping cost and days for a zipcode.
-- **Auth:** None
-- **Query:**
-  | Name    | Type   | Required |
-  | ------- | ------ | -------- |
-  | zipcode | string | Yes      |
-- **Response:**
-  ```json
-  {
-    "error": null,
-    "zipcode": "12345-678",
-    "cost": 7,
-    "days": 3
-  }
-  ```
-
-### `POST /cart/finish`
-- **Description:** Finish the cart and create an order (returns Stripe checkout URL).
-- **Auth:** Yes (Bearer token)
-- **Body:**
-  ```json
-  {
-    "cart": [
-      { "productId": 1, "quantity": 2 }
-    ],
-    "addressId": 1
-  }
-  ```
-- **Response:**
-  ```json
-  {
-    "error": null,
-    "url": "https://checkout.stripe.com/..."
-  }
-  ```
-
----
-
-## User
-
-### `POST /user/register` - OK
-- **Description:** Register a new user.
-- **Auth:** None
-- **Body:**
-  ```json
-  {
-    "name": "User Name",
-    "email": "user@email.com",
-    "password": "password123"
-  }
-  ```
-- **Response:**
-  ```json
-  {
-    "error": null,
-    "user": {
-      "id": 1,
-      "name": "User Name",
-      "email": "user@email.com"
-    }
-  }
-  ```
-
-### `POST /user/login` - OK
-- **Description:** Login and receive a token.
-- **Auth:** None
-- **Body:**
-  ```json
-  {
-    "email": "user@email.com",
-    "password": "password123"
-  }
-  ```
-- **Response:**
-  ```json
-  {
-    "error": null,
-    "token": "<uuid>"
-  }
-  ```
-
-### `GET /user/addresses`
-- **Description:** Get all addresses for the logged-in user.
-- **Auth:** Yes (Bearer token)
-- **Response:**
-  ```json
-  {
-    "error": null,
-    "addresses": [
-      {
-        "id": 1,
-        "zipcode": "12345-678",
-        "street": "Street Name",
-        "number": "123",
-        "city": "City",
-        "state": "State",
-        "country": "Country",
-        "complement": "Apt 1"
-      }
-    ]
-  }
-  ```
-
-### `POST /user/addresses`
-- **Description:** Add a new address for the logged-in user.
-- **Auth:** Yes (Bearer token)
-- **Body:**
-  ```json
-  {
-    "zipcode": "12345-678",
-    "street": "Street Name",
-    "number": "123",
-    "city": "City",
-    "state": "State",
-    "country": "Country",
-    "complement": "Apt 1"
-  }
-  ```
-- **Response:**
-  ```json
-  {
-    "error": null,
-    "address": {
-      "id": 1,
-      "zipcode": "12345-678",
-      "street": "Street Name",
-      "number": "123",
-      "city": "City",
-      "state": "State",
-      "country": "Country",
-      "complement": "Apt 1"
-    }
-  }
-  ```
-
----
-
-## Orders
-
-### `GET /orders`
-- **Description:** List all orders for the logged-in user.
-- **Auth:** Yes (Bearer token)
-- **Response:**
-  ```json
-  {
-    "error": null,
-    "orders": [
-      {
-        "id": 1,
-        "status": "pending",
-        "total": 199.99,
-        "createdAt": "2024-07-24T18:49:43.000Z"
-      }
-    ]
-  }
-  ```
-
-### `GET /orders/:id`
-- **Description:** Get details of a specific order by ID for the logged-in user.
-- **Auth:** Yes (Bearer token)
-- **Params:**
-  | Name | Type             | Required |
-  | ---- | ---------------- | -------- |
-  | id   | string (numeric) | Yes      |
-- **Response:**
-  ```json
-  {
-    "error": null,
-    "order": {
-      "id": 1,
-      "status": "pending",
-      "total": 199.99,
-      "shippingCost": 7,
-      "shippingDays": 3,
-      "shippingZipcode": "12345-678",
-      "shippingStreet": "Street Name",
-      "shippingNumber": "123",
-      "shippingCity": "City",
-      "shippingState": "State",
-      "shippingCountry": "Country",
-      "shippingComplement": "Apt 1",
-      "createdAt": "2024-07-24T18:49:43.000Z",
-      "orderItems": [
-        {
-          "id": 1,
-          "quantity": 2,
-          "price": 99.99,
-          "product": {
-            "id": 1,
-            "label": "Product Name",
-            "price": 99.99,
-            "image": "media/products/<filename>"
-          }
-        }
-      ]
-    }
-  }
-  ```
-
-### `GET /orders/session`
-- **Description:** Get order ID by Stripe session ID.
-- **Auth:** None
-- **Query:**
-  | Name       | Type   | Required | Description                |
-  | ---------- | ------ | -------- | -------------------------- |
-  | session_id | string | Yes      | Stripe checkout session ID |
-- **Response:**
-  ```json
-  {
-    "error": null,
-    "orderId": 123
-  }
-  ```
-
----
-
-## Webhooks
-
-### `POST /webhook/stripe`
-- **Description:** Handle Stripe payment events and update order statuses.
-- **Auth:** None (verified via Stripe signature)
-- **Purpose:** Processes Stripe webhook events to automatically update order statuses
-- **Supported Events:**
-  - `checkout.session.completed` - Marks order as `paid`
-  - `checkout.session.expired` - Marks order as `expired`
-  - `payment_intent.payment_failed` - Marks order as `failed`
-- **Order Status Values:**
-  - `pending` - Order created, waiting for payment
-  - `paid` - Payment completed successfully
-  - `expired` - Checkout session expired
-  - `failed` - Payment failed
-
----
-
-## Authentication
-
-Some endpoints require authentication via a Bearer token. Pass the token in the `Authorization` header:
-
-```
-Authorization: Bearer <token>
+```json
+{ "pong": true }
 ```
 
----
+### 2. Consulte o catálogo e monte o carrinho
 
-## Error Handling
+Envie `GET http://127.0.0.1:8000/api/products?limit=5&orderBy=price`. A resposta traz até cinco itens no campo `products`, ordenados pelo maior preço. Pegue o `id` de um produto e consulte seus detalhes em `GET /api/product/{id}`.
 
-All endpoints return an `error` field. If the request is successful, `error` is `null`. Otherwise, it contains an error message.
+Para montar o carrinho, envie `POST http://127.0.0.1:8000/api/cart/mount` com o JSON abaixo. Use um ID retornado na listagem.
 
----
-
-## Data Models
-
-See `prisma/schema.prisma` for full database models.
-
----
-
-## Stripe Webhook Setup
-
-The application includes a Stripe webhook endpoint to handle payment events and automatically update order statuses.
-
-### Environment Variables Required
-
-Add these environment variables to your `.env` file:
-
-```env
-STRIPE_SECRET_KEY=your_stripe_secret_key
-STRIPE_WEBHOOK_SECRET=your_stripe_webhook_secret
+```json
+{ "ids": [1] }
 ```
 
-### Setting up the Webhook in Stripe Dashboard
+Consulte o frete simulado em `GET /api/cart/shipping?zipcode=12345-678`. A API retorna um valor fixo de 7 e um prazo de 3 dias.
 
-1. Go to your Stripe Dashboard
-2. Navigate to Developers > Webhooks
-3. Click "Add endpoint"
-4. Set the endpoint URL to: `https://your-domain.com/webhook/stripe`
-5. Select the following events:
-   - `checkout.session.completed`
-   - `checkout.session.expired`
-   - `payment_intent.payment_failed`
-6. Copy the webhook signing secret and add it to your environment variables as `STRIPE_WEBHOOK_SECRET`
+### 3. Faça login e consulte os endereços
 
-### Security
+Envie `POST http://127.0.0.1:8000/api/user/login` com a conta de demonstração criada pelo seeder.
 
-The webhook endpoint verifies the Stripe signature to ensure requests are legitimate. Make sure to:
-- Keep your `STRIPE_WEBHOOK_SECRET` secure
-- Use HTTPS in production
-- Never expose the webhook secret in client-side code 
+```json
+{
+  "email": "john.doe@example.com",
+  "password": "12345678"
+}
+```
+
+Copie o valor do campo `token` na resposta. Crie a requisição `GET http://127.0.0.1:8000/api/user/addresses` e, na aba **Auth**, selecione **Bearer Token** e cole o token. O Insomnia enviará o cabeçalho `Authorization: Bearer <token>`. A resposta traz os endereços da conta no campo `addresses`.
+
+### 4. Simule um pedido
+
+Envie `POST http://127.0.0.1:8000/api/cart/finish` com o mesmo Bearer Token. Use um `productId` do catálogo e um `addressId` da conta autenticada.
+
+```json
+{
+  "cart": [{ "productId": 1, "quantity": 2 }],
+  "addressId": 1
+}
+```
+
+Em caso de sucesso, a API grava o pedido como pendente e retorna HTTP 200 com corpo vazio.
+
+## Rotas da API
+
+| Método | Rota | O que faz | Bearer Token |
+| --- | --- | --- | --- |
+| GET | `/api/ping` | Verifica se a API está respondendo | Não |
+| GET | `/api/banners` | Lista banners | Não |
+| GET | `/api/products` | Lista produtos. Aceita `limit`, `orderBy` (`views`, `selling` ou `price`) e `metadata` (JSON com IDs de metadados como chaves e IDs de valores como valores) | Não |
+| GET | `/api/product/{id}` | Busca um produto pelo ID | Não |
+| GET | `/api/product/{id}/related` | Lista produtos da mesma categoria. Aceita `limit` | Não |
+| GET | `/api/categories/{slug}/metadata` | Consulta os metadados de uma categoria, como `camisetas` | Não |
+| POST | `/api/cart/mount` | Busca os produtos de um carrinho pela lista `ids` | Não |
+| GET | `/api/cart/shipping` | Simula o frete para o parâmetro `zipcode` | Não |
+| POST | `/api/user/register` | Cria uma conta com `name`, `email` e `password` | Não |
+| POST | `/api/user/login` | Retorna um token do Laravel Sanctum | Não |
+| GET | `/api/user/addresses` | Lista os endereços da conta autenticada | Sim |
+| POST | `/api/user/addresses` | Cadastra um endereço com `zipcode`, `street`, `number`, `city`, `state`, `country` e `complement` opcional | Sim |
+| POST | `/api/cart/finish` | Cria um pedido com `cart` e `addressId` | Sim |
+
+Para conferir as rotas pelo terminal, rode `php artisan route:list --path=api`.
